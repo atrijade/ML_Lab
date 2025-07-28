@@ -1,0 +1,61 @@
+import numpy as np
+import pandas as pd
+
+# Load the dataset
+data = pd.read_csv('Training_examples.csv')  # Ensure this file exists
+
+# Separate features and target
+concepts = np.array(data.iloc[:, 0:-1])  # All columns except last
+target = np.array(data.iloc[:, -1])      # Last column (Yes/No labels)
+
+def learn(concepts, target):
+    '''
+    Implements the Candidate Elimination algorithm.
+    
+    Arguments:
+    concepts -- Feature matrix (2D numpy array)
+    target   -- Target output (1D numpy array)
+    '''
+    # Step 1: Initialize Specific Hypothesis (S) with the first positive example
+    specific_h = concepts[0].copy()
+    general_h = [["?" for _ in range(len(specific_h))] for _ in range(len(specific_h))]
+
+    print("Initial Specific_h:", specific_h)
+    print("Initial General_h:", general_h)
+
+    # Step 2: Iterate over all training examples
+    for i, instance in enumerate(concepts):
+        if target[i] == "Yes":
+            # For positive example: general_h unchanged, update specific_h
+            for x in range(len(specific_h)):
+                if instance[x] != specific_h[x]:
+                    specific_h[x] = "?"
+                    general_h[x][x] = "?"
+        else:
+            # For negative example: keep specific_h unchanged, update general_h
+            for x in range(len(specific_h)):
+                if instance[x] != specific_h[x]:
+                    general_h[x][x] = specific_h[x]
+                else:
+                    general_h[x][x] = "?"
+
+        # Display step-wise learning process
+        print(f"\nStep {i+1}: Instance = {instance}, Target = {target[i]}")
+        print("Updated Specific_h:", specific_h)
+        print("Updated General_h:", general_h)
+
+    # Step 3: Remove redundant hypotheses from general_h
+    final_general_h = [g for g in general_h if g != ["?" for _ in range(len(specific_h))]]
+
+    return specific_h, final_general_h
+
+# Run the Candidate Elimination algorithm
+s_final, g_final = learn(concepts, target)
+
+# Output final hypotheses
+print("\nFinal Specific Hypothesis (S):")
+print(s_final)
+
+print("\nFinal General Hypotheses (G):")
+for h in g_final:
+    print(h)
